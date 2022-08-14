@@ -1,17 +1,3 @@
-<<<<<<< HEAD
-CROSS_COMPILE ?= 
-CC      = $(CROSS_COMPILE)gcc
-CFLAGS  = -Wall -Werror -g
-TARGET  = aesd-circular-buffer.o
-
-all: $(TARGET)
-
-$(TARGET): aesd-circular-buffer.c aesd-circular-buffer.h
-	$(CC) $(CFLAGS) -c aesd-circular-buffer.c -o $(TARGET)
-
-clean:
-	rm -f $(TARGET)
-=======
 # See example Makefile from scull project
 # Comment/uncomment the following line to disable/enable debugging
 #DEBUG = y
@@ -41,5 +27,3 @@ endif
 
 clean:
 	rm -rf *.o *~ core .depend .*.cmd *.ko *.mod.c .tmp_versions
-
->>>>>>> 4d5ef82 (Assignment 8 base implementation)
