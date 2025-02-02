@@ -1,5 +1,9 @@
 #include "systemcalls.h"
-
+#include <sys/types.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <fcntl.h>
 /**
  * @param cmd the command to execute with system()
  * @return true if the command in @param cmd was executed
@@ -9,15 +13,30 @@
 */
 bool do_system(const char *cmd)
 {
+    // if command is NULL it returns non zero if shell is available and 0 is not.
+    // if child process couldnot be created, or its status couldnot be retrieved, the return value is -1 and errno is set.
+    // if a shell could not be executed in the child process, then return value is as though the child shell terminated by calling _exit(2) with status 127.
+    // If call succeeds, then the return value is the termination status of child shell used to execute cmd. 
 
-/*
- * TODO  add your code here
- *  Call the system() function with the command set in the cmd
- *   and return a boolean true if the system() call completed with success
- *   or false() if it returned a failure
-*/
+    if(cmd == NULL)
+    {
+        return false;
+    }
+    int ret;
+    ret = system(cmd);
+    if(ret == -1)
+    {
+        // The process couldnot be created or its status couldnot be retrived.
+        return false;
+    }
+    else if (WIFEXITED(ret) && WEXITSTATUS(ret) == 0)
+    {
+        // Command executed successfully
+        return true;
+    }
 
-    return true;
+    // Command executed but returned a non-zero status
+    return false;
 }
 
 /**
@@ -58,10 +77,45 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
+    int ret;
+    pid_t pid = fork();
+    if(pid == -1)
+    {
+        va_end(args);
+        return false;
+    }
+    else if (pid == 0)
+    {
+        ret = execv(command[0],command);
+        if(ret == -1)
+        {
+            perror("execv");
+        }
+        exit(EXIT_FAILURE);
+    }
+
+    int status;
+
+    if(waitpid(pid, &status, 0) == -1)
+    {
+        va_end(args);
+        return false;
+    }
+    
+    if((WIFEXITED(status) && WEXITSTATUS(status)) == 0)
+    {
+        va_end(args);
+        return true;
+    }
+    else
+    {
+        va_end(args);
+        return false;
+    }
 
     va_end(args);
+    return false;
 
-    return true;
 }
 
 /**
@@ -92,8 +146,59 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
+    int ret;
+    pid_t pid = fork();
+    if(pid == -1)
+    {
+        va_end(args);
+        return false;
+    }
+    else if (pid == 0)
+    {
+        // Open the output file
+        int fd = open(outputfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fd == -1) 
+        {
+            perror("ERROR: open");
+            exit(EXIT_FAILURE); 
+        }
+        // Redirect stdout to the file
+        if (dup2(fd, STDOUT_FILENO) == -1) 
+        {
+            perror("ERROR: dup2");
+            close(fd);
+            exit(EXIT_FAILURE); 
+        }
+        // Close the file descriptor after duplication
+        close(fd);
+        ret = execv(command[0],command);
+        if(ret == -1)
+        {
+            perror("execv");
+        }
+        exit(EXIT_FAILURE);
+    }
+
+    int status;
+
+    if(waitpid(pid, &status, 0) == -1)
+    {
+        va_end(args);
+        return false;
+    }
+    
+    if((WIFEXITED(status) && WEXITSTATUS(status)) == 0)
+    {
+        va_end(args);
+        return true;
+    }
+    else
+    {
+        va_end(args);
+        return false;
+    }
 
     va_end(args);
 
-    return true;
+    return false;
 }
