@@ -9,7 +9,7 @@ OUTDIR=/tmp/aeld
 KERNEL_REPO=git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 KERNEL_VERSION=v5.15.163
 BUSYBOX_VERSION=1_33_1
-FINDER_APP_DIR=$(realpath $HOME/AESD/assignment1/assignment-1-japa7016/finder-app)
+FINDER_APP_DIR=$(realpath $(dirname $0))
 
 ARCH=arm64
 CROSS_COMPILE=aarch64-none-linux-gnu-
@@ -112,9 +112,10 @@ cp writer "${OUTDIR}/rootfs/home/"
 
 # TODO: Copy the finder related scripts and executables to the /home directory
 # on the target rootfs
+mkdir -p "${OUTDIR}/rootfs/home/conf"
 cp "${FINDER_APP_DIR}/finder.sh" "${OUTDIR}/rootfs/home/"
-cp "${FINDER_APP_DIR}/conf/username.txt" "${OUTDIR}/rootfs/home/"
-cp "${FINDER_APP_DIR}/conf/assignment.txt" "${OUTDIR}/rootfs/home/"
+cp "${FINDER_APP_DIR}/conf/username.txt" "${OUTDIR}/rootfs/home/conf"
+cp "${FINDER_APP_DIR}/conf/assignment.txt" "${OUTDIR}/rootfs/home/conf"
 cp "${FINDER_APP_DIR}/finder-test.sh" "${OUTDIR}/rootfs/home/"
 cp "${FINDER_APP_DIR}/autorun-qemu.sh" "${OUTDIR}/rootfs/home/"
 
