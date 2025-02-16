@@ -22,12 +22,15 @@ void cleanup_and_exit(int signum)
 {
     syslog(LOG_INFO, "Caught signal, exiting");
 
-    if (clientfd != -1) {
+    if (clientfd != -1) 
+    {
         close(clientfd);
     }
-    if (sockfd != -1) {
+    if (sockfd != -1) 
+    {
         close(sockfd);
     }
+    
     remove(FILE_PATH);
     closelog();
     exit(0);
@@ -70,15 +73,32 @@ void handle_client(int clientfd, struct sockaddr_in *client_addr)
 void daemonize() 
 {
     pid_t pid = fork();
-    if (pid < 0) exit(EXIT_FAILURE);
-    if (pid > 0) exit(EXIT_SUCCESS);
+    if (pid < 0) 
+    {
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0) 
+    {
+        exit(EXIT_SUCCESS);
+    }
     
-    if (setsid() < 0) exit(EXIT_FAILURE);
+    if (setsid() < 0) 
+    {
+        exit(EXIT_FAILURE);
+    }
+    
     signal(SIGHUP, SIG_IGN);
     pid = fork();
-    if (pid < 0) exit(EXIT_FAILURE);
-    if (pid > 0) exit(EXIT_SUCCESS);
     
+    if (pid < 0) 
+    {
+        exit(EXIT_FAILURE);
+    }
+    if (pid > 0) 
+    {
+        exit(EXIT_SUCCESS);
+    }
+
     umask(0);
     chdir("/");
     close(STDIN_FILENO);
@@ -119,7 +139,8 @@ int main(int argc, char *argv[]) {
     int optval = 1;
     setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
-    if (bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+    if (bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen) == -1) 
+    {
         syslog(LOG_ERR, "bind failed");
         freeaddrinfo(servinfo);
         close(sockfd);
@@ -142,7 +163,8 @@ int main(int argc, char *argv[]) {
     while (1) 
     {
         clientfd = accept(sockfd, (struct sockaddr*)&client_addr, &addr_size);
-        if (clientfd == -1) {
+        if (clientfd == -1) 
+        {
             syslog(LOG_ERR, "accept failed");
             continue;
         }
