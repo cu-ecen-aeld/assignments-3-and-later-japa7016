@@ -35,7 +35,7 @@ void cleanup_and_exit(int signum)
     closelog();
     exit(0);
 }
-//test
+
 void handle_client(int clientfd, struct sockaddr_in *client_addr) 
 {
     char buffer[BUFFER_SIZE];
