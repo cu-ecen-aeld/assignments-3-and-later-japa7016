@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 
     pthread_join(timer_thread, NULL);
 
-    remove(FILE_PATH);
+    
     pthread_mutex_destroy(&g_mutex);
     closelog();
     return 0;
