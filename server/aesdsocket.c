@@ -166,8 +166,6 @@ int main(int argc, char *argv[])
     graceful_shutdown();
 
     pthread_join(timer_thread, NULL);
-
-    
     pthread_mutex_destroy(&g_mutex);
     closelog();
     return 0;
