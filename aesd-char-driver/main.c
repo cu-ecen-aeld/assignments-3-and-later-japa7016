@@ -158,12 +158,10 @@
          memcpy((char *)entry.buffptr, &dev->pending_write_buf[i], command_len);
  
          {
-            const struct aesd_buffer_entry *overwritten =
-            aesd_circular_buffer_add_entry_return_overwrite(&dev->circbuf, &entry);
-            if (overwritten) 
+            const char *oldptr = aesd_circular_buffer_add_entry(&dev->circbuf, &entry);
+            if (oldptr) 
             {
-                kfree((void *)overwritten->buffptr);
-                kfree(overwritten);
+                kfree((void *)oldptr);
             }
          }
  
