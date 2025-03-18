@@ -1,3 +1,13 @@
+#ifndef USE_AESD_CHAR_DEVICE
+#define USE_AESD_CHAR_DEVICE 1  
+#endif
+
+#if USE_AESD_CHAR_DEVICE
+#define FILE_PATH "/dev/aesdchar"
+#else
+#define FILE_PATH "/var/tmp/aesdsocketdata"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,7 +27,6 @@
 
 
 #define PORT             "9000"
-#define FILE_PATH        "/var/tmp/aesdsocketdata"
 #define BUFFER_SIZE      1024
 #define TIMESTAMP_INTSEC 10     
 
@@ -108,6 +117,7 @@ int main(int argc, char *argv[])
         daemonize();
     }
 
+#if !USE_AESD_CHAR_DEVICE
     int fd = open(FILE_PATH, O_CREAT|O_RDWR|O_TRUNC, 0666);
     if(fd < 0) 
     {
@@ -115,9 +125,12 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
     close(fd);
+#endif
 
+#if !USE_AESD_CHAR_DEVICE
     pthread_t timer_thread;
     pthread_create(&timer_thread, NULL, timestamp_thread_func, NULL);
+#endif
 
     g_server_socket = setup_server_socket(PORT, daemon_mode);
     if(g_server_socket < 0) 
@@ -165,7 +178,11 @@ int main(int argc, char *argv[])
 
     graceful_shutdown();
 
+
+#if !USE_AESD_CHAR_DEVICE
     pthread_join(timer_thread, NULL);
+#endif
+
     pthread_mutex_destroy(&g_mutex);
     closelog();
     return 0;
@@ -229,6 +246,7 @@ void* client_thread_func(void* thread_param)
     return NULL;
 }
 
+#if !USE_AESD_CHAR_DEVICE
 void* timestamp_thread_func(void* arg)
 {
     while(!g_exit_flag)
@@ -254,6 +272,7 @@ void* timestamp_thread_func(void* arg)
     }
     return NULL;
 }
+#endif
 
 
 void graceful_shutdown(void)
