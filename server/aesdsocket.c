@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <sys/queue.h>
+#include "../aesd-char-driver/aesd_ioctl.h"
 
 
 #define PORT             "9000"
@@ -205,6 +206,46 @@ void* client_thread_func(void* thread_param)
         if (bytes_received <= 0) 
         {
             break;
+        }
+        buffer[bytes_received] = '\0';
+
+        if (strncmp(buffer, "AESDCHAR_IOCSEEKTO:", strlen("AESDCHAR_IOCSEEKTO:")) == 0)
+        {
+            unsigned int write_cmd, write_cmd_offset;
+            char *params = buffer + strlen("AESDCHAR_IOCSEEKTO:");
+            if (sscanf(params, "%u,%u", &write_cmd, &write_cmd_offset) == 2)
+            {
+                int fd = open(FILE_PATH, O_RDWR);
+                if (fd < 0)
+                {
+                    syslog(LOG_ERR, "Failed to open %s for ioctl: %s", FILE_PATH, strerror(errno));
+                }
+                else
+                {
+                    struct aesd_seekto seekto;
+                    seekto.write_cmd = write_cmd;
+                    seekto.write_cmd_offset = write_cmd_offset;
+                    if (ioctl(fd, AESDCHAR_IOCSEEKTO, &seekto) < 0)
+                    {
+                        syslog(LOG_ERR, "ioctl AESDCHAR_IOCSEEKTO failed: %s", strerror(errno));
+                    }
+
+                    {
+                        char read_buf[BUFFER_SIZE];
+                        ssize_t n;
+                        while ((n = read(fd, read_buf, BUFFER_SIZE)) > 0)
+                        {
+                            send(tinfo->client_fd, read_buf, n, 0);
+                        }
+                    }
+                    close(fd);
+                }
+            }
+            else
+            {
+                syslog(LOG_ERR, "Invalid ioctl command format from client");
+            }
+            continue;
         }
         
         pthread_mutex_lock(&g_mutex);
